@@ -1,9 +1,11 @@
+import os
 import requests
 from pathlib import Path
 from pathvalidate import sanitize_filename
+from bs4 import BeautifulSoup
 
 
-def download_txt(url, filename, folder='books/'):
+def download_txt(url, filename, number, folder='books/'):
     """Функция для скачивания текстовых файлов.
         Args:
             url (str): Cсылка на текст, который хочется скачать.
@@ -12,46 +14,51 @@ def download_txt(url, filename, folder='books/'):
         Returns:
             str: Путь до файла, куда сохранён текст.
         """
-    filename = sanitize_filename(filename)
     Path(f'./{folder}').mkdir(parents=True, exist_ok=True)
-    filepath = Path(f'./{folder}/{filename}.txt')
-    # try:
+    filename = sanitize_filename(filename)
+    filepath = Path(f'./{folder}/{number}.{filename}.txt')
+
     response = requests.get(url)
-    print('test!')
     response.raise_for_status()
 
-    # check_for_redirect(response)
+    check_for_redirect(response)
 
     with open(filepath, 'wb') as file:
         file.write(response.content)
 
-    # except requests.exceptions.HTTPError:
-    #     print(f'Can not create book {filename}, it does not exist!')
-
     return filepath
 
 
-# def check_for_redirect(response):
-#     if response.history:
-#         raise requests.exceptions.HTTPError
+def fetch_book_n_author_name(page_url):
+    response = requests.get(page_url)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, 'lxml')
+    title_tag = soup.find('body').find('table').find('td', class_='ow_px_td').find('div').find('h1').text
+    title_tag = title_tag.split('   ::   ')
+
+    title_tag[0].strip()
+    title_tag[1].strip()
+    return title_tag[0]
+
+
+def check_for_redirect(response):
+    if response.history:
+        raise requests.exceptions.HTTPError
 
 
 def main():
-    url = 'http://tululu.org/txt.php?id=1'
+    for book_id in range(1, 11):
+        try:
+            url_pattern = f'https://tululu.org/txt.php?id={book_id}'
+            page_url_pattern = f'https://tululu.org/b{book_id}'
+            filename = fetch_book_n_author_name(page_url_pattern)
 
-    filepath = download_txt(url, 'Али\\би')
-    print(filepath)  # Выведется books/Алиби.txt
-
-    # dir_name = 'books'
-    # for book_id in range(1, 11):
-    #     Path(f'./{dir_name}').mkdir(parents=True, exist_ok=True)
-    #     link_pattern = f'https://tululu.org/txt.php?id={book_id}'
-    #     output = Path(f'./{dir_name}/id{book_id}.txt')
-    #
-    #     try:
-    #         download_books(link_pattern, output)
-    #     except requests.exceptions.HTTPError:
-    #         print(f'Can not create book {output}, it does not exist!')
+            download_txt(url_pattern, filename, book_id)
+        except requests.exceptions.HTTPError:
+            print(f"Can't create book {filename}, it does not exist!")
+        except IndexError:
+            print(f"Can't create book {filename}, it does not exist!")
 
 
 if __name__ == '__main__':
