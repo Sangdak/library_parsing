@@ -72,7 +72,10 @@ def parse_book_page(page_url):
     comments = soup.find_all('div', class_='texts')
     comments_tag = [tag.find('span').text for tag in comments]
 
-    return title_tag, image_tag, '\n'.join(comments_tag)
+    genres = soup.find('span', class_='d_book').find_all('a')
+    genres_tag = [tag.text for tag in genres]
+
+    return title_tag, image_tag, '\n'.join(comments_tag), genres_tag
 
 
 def check_for_redirect(response):
@@ -86,9 +89,10 @@ def main():
         try:
             url_pattern = urljoin(site_url, f'/txt.php?id={book_id}')
             page_url_pattern = urljoin(site_url, f'/b{book_id}')
-            filename, book_cover_url, book_comments = parse_book_page(page_url_pattern)
+            filename, book_cover_url, book_comments, book_genges = parse_book_page(page_url_pattern)
             book_cover_url = urljoin(site_url, book_cover_url)
-            print(book_comments)
+            print(book_genges)
+            # print(book_comments)
 
             # download_txt(url_pattern, filename, book_id)
             # download_book_cover(book_cover_url)
