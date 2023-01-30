@@ -55,19 +55,24 @@ def download_book_cover(cover_img_url, folder='images/'):
     # return filepath
 
 
-def fetch_title_n_author_name_n_book_cover_url(page_url):
+def parse_book_page(page_url):
     response = requests.get(page_url)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, 'lxml')
+
     title_name_tag = soup.find('body').find('table').find('td', class_='ow_px_td').find('div').find('h1').text
     title_name_tag = title_name_tag.split('   ::   ')
 
-    image_tag = soup.find('div', class_='bookimage').find('img')['src']
-
     title_tag = title_name_tag[0].strip()
     author_tag = title_name_tag[1].strip()
-    return title_tag, image_tag
+
+    image_tag = soup.find('div', class_='bookimage').find('img')['src']
+
+    comments = soup.find_all('div', class_='texts')
+    comments_tag = [tag.find('span').text for tag in comments]
+
+    return title_tag, image_tag, '\n'.join(comments_tag)
 
 
 def check_for_redirect(response):
@@ -81,12 +86,12 @@ def main():
         try:
             url_pattern = urljoin(site_url, f'/txt.php?id={book_id}')
             page_url_pattern = urljoin(site_url, f'/b{book_id}')
-            filename, book_cover_url = fetch_title_n_author_name_n_book_cover_url(page_url_pattern)
+            filename, book_cover_url, book_comments = parse_book_page(page_url_pattern)
             book_cover_url = urljoin(site_url, book_cover_url)
-            print(book_cover_url)
+            print(book_comments)
 
             # download_txt(url_pattern, filename, book_id)
-            download_book_cover(book_cover_url)
+            # download_book_cover(book_cover_url)
 
 
         except requests.exceptions.HTTPError:
