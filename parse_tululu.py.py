@@ -1,9 +1,18 @@
 import os
+import sys
 import requests
 from pathlib import Path
 from pathvalidate import sanitize_filename
 from bs4 import BeautifulSoup
 from urllib.parse import unquote, urljoin, urlparse
+import argparse
+
+
+def create_parser():
+    parser = argparse.ArgumentParser(description='Скрипт для последовательного скачивания книг с сайта tululu.org ')
+    parser.add_argument('start_index', help='С какого индекса книги (число) нужно начать скачивание', type=int)
+    parser.add_argument('end_index', help='Каким индексом книги (число) нужно завершить скачивание', type=int)
+    return parser
 
 
 def download_txt(url, filename, number, folder='books/'):
@@ -83,7 +92,14 @@ def check_for_redirect(response):
 
 def main():
     site_url = 'https://tululu.org/'
-    for book_id in range(1, 11):
+
+    parser = create_parser()
+    if len(sys.argv) < 3:
+        parser.print_help()
+    args = parser.parse_args()
+
+
+    for book_id in range(args.start_index, args.end_index + 1):
         try:
             url_pattern = urljoin(site_url, f'/txt.php?id={book_id}')
             page_url_pattern = urljoin(site_url, f'/b{book_id}')
@@ -98,7 +114,7 @@ def main():
             print(book_comments) if book_comments else print('There is no comments for this book')
             print()
         except (requests.exceptions.HTTPError, IndexError, AttributeError) as e:
-            print(f"Can't create book {filename}, it does not exist!")
+            print(f"Can't create book {filename}, it doesn't exist!")
 
 
 if __name__ == '__main__':
