@@ -52,8 +52,6 @@ def download_book_cover(cover_img_url, folder='images/'):
     with open(filepath, 'wb') as file:
         file.write(response.content)
 
-    # return filepath
-
 
 def parse_book_page(page_url):
     response = requests.get(page_url)
@@ -91,18 +89,15 @@ def main():
             page_url_pattern = urljoin(site_url, f'/b{book_id}')
             filename, book_cover_url, book_comments, book_genges = parse_book_page(page_url_pattern)
             book_cover_url = urljoin(site_url, book_cover_url)
-            print(book_genges)
-            # print(book_comments)
 
-            # download_txt(url_pattern, filename, book_id)
-            # download_book_cover(book_cover_url)
+            download_txt(url_pattern, filename, book_id)
+            download_book_cover(book_cover_url)
 
-
-        except requests.exceptions.HTTPError:
-            print(f"Can't create book {filename}, it does not exist!")
-        except IndexError:
-            print(f"Can't create book {filename}, it does not exist!")
-        except AttributeError:
+            print(filename)
+            print(book_genges) if book_genges else print('There is no genres for this book!')
+            print(book_comments) if book_comments else print('There is no comments for this book')
+            print()
+        except (requests.exceptions.HTTPError, IndexError, AttributeError) as e:
             print(f"Can't create book {filename}, it does not exist!")
 
 
