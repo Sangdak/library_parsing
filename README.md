@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ## How to use
 In the terminal, go to the repository directory and run the command
 ```Python
-python3 tululu.py 1 10
+python3 parse_tululu.py 1 10
 ```
 For books with `id` numbers from `1` to `10`, texts will be downloaded 
 (nested `books` directory) and book covers (subdirectory `images` ).
